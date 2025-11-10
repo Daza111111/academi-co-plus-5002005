@@ -74,11 +74,19 @@ const StudentGradesView = ({ classes }: StudentGradesViewProps) => {
     const corteGrades = grades.filter((g) => g.corte === corte);
     if (corteGrades.length === 0) return null;
 
+    const totalPercentage = corteGrades.reduce((sum, grade) => sum + grade.percentage, 0);
     const totalWeighted = corteGrades.reduce(
       (sum, grade) => sum + (grade.score * grade.percentage / 100),
       0
     );
-    return totalWeighted.toFixed(2);
+    
+    // Calculate the corte average (0-5.0 scale)
+    const corteAverage = totalPercentage > 0 ? (totalWeighted / totalPercentage) * 100 : 0;
+    return corteAverage;
+  };
+
+  const getCorteWeight = (corte: number) => {
+    return corte === 1 ? 0.3 : 0.35;
   };
 
   const calculateFinalGrade = (grades: GradeData[]) => {
@@ -89,11 +97,11 @@ const StudentGradesView = ({ classes }: StudentGradesViewProps) => {
     if (!corte1 && !corte2 && !corte3) return null;
 
     const final =
-      (parseFloat(corte1 || "0") * 0.3) +
-      (parseFloat(corte2 || "0") * 0.35) +
-      (parseFloat(corte3 || "0") * 0.35);
+      (corte1 || 0) * 0.3 +
+      (corte2 || 0) * 0.35 +
+      (corte3 || 0) * 0.35;
 
-    return final.toFixed(2);
+    return final;
   };
 
   if (loading) {
@@ -114,10 +122,11 @@ const StudentGradesView = ({ classes }: StudentGradesViewProps) => {
                   <CardTitle>{classItem.name}</CardTitle>
                   <CardDescription>Calificaciones por Corte</CardDescription>
                 </div>
-                {finalGrade && (
+                {finalGrade !== null && (
                   <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Nota Final</p>
-                    <p className="text-2xl font-bold text-primary">{finalGrade}</p>
+                    <p className="text-sm text-muted-foreground">Nota Global</p>
+                    <p className="text-3xl font-bold text-primary">{finalGrade.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground">sobre 5.0</p>
                   </div>
                 )}
               </div>
@@ -132,34 +141,59 @@ const StudentGradesView = ({ classes }: StudentGradesViewProps) => {
                   {[1, 2, 3].map((corte) => {
                     const corteGrades = classGrades.filter((g) => g.corte === corte);
                     const corteAvg = calculateCorteAverage(classGrades, corte);
-                    const cortePercentage = corte === 1 ? 30 : 35;
+                    const corteWeight = getCorteWeight(corte);
+                    const corteWeightPercentage = corteWeight * 100;
+                    const corteContribution = corteAvg ? corteAvg * corteWeight : 0;
 
                     return corteGrades.length > 0 ? (
-                      <div key={corte}>
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold">Corte {corte}</h4>
-                          <Badge variant="outline">
-                            {corteAvg} / 5.0 ({cortePercentage}%)
-                          </Badge>
+                      <div key={corte} className="border rounded-lg p-4 bg-muted/30">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-lg font-semibold">Corte {corte}</h4>
+                          <div className="text-right">
+                            <Badge variant="secondary" className="text-base px-3 py-1">
+                              Nota del corte: {corteAvg?.toFixed(2)} / 5.0
+                            </Badge>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Vale {corteWeightPercentage}% de la nota final
+                            </p>
+                            <p className="text-sm font-semibold text-primary">
+                              Aporte a nota global: {corteContribution.toFixed(2)}
+                            </p>
+                          </div>
                         </div>
                         <Table>
                           <TableHeader>
                             <TableRow>
                               <TableHead>Evaluación</TableHead>
-                              <TableHead className="text-right">Porcentaje</TableHead>
+                              <TableHead className="text-right">% del corte</TableHead>
                               <TableHead className="text-right">Nota</TableHead>
+                              <TableHead className="text-right">Aporte</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {corteGrades.map((grade, idx) => (
-                              <TableRow key={idx}>
-                                <TableCell>{grade.grade_item_name}</TableCell>
-                                <TableCell className="text-right">{grade.percentage}%</TableCell>
-                                <TableCell className="text-right font-medium">
-                                  {grade.score.toFixed(2)}
-                                </TableCell>
-                              </TableRow>
-                            ))}
+                            {corteGrades.map((grade, idx) => {
+                              const contribution = (grade.score * grade.percentage / 100);
+                              return (
+                                <TableRow key={idx}>
+                                  <TableCell>{grade.grade_item_name}</TableCell>
+                                  <TableCell className="text-right">{grade.percentage}%</TableCell>
+                                  <TableCell className="text-right font-medium">
+                                    {grade.score.toFixed(2)}
+                                  </TableCell>
+                                  <TableCell className="text-right text-muted-foreground">
+                                    {contribution.toFixed(2)}
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                            <TableRow className="bg-muted/50 font-semibold">
+                              <TableCell colSpan={3} className="text-right">
+                                Total del Corte {corte}:
+                              </TableCell>
+                              <TableCell className="text-right text-primary">
+                                {corteAvg?.toFixed(2)} / 5.0
+                              </TableCell>
+                            </TableRow>
                           </TableBody>
                         </Table>
                       </div>
