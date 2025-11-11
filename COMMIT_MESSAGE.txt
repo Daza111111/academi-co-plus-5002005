@@ -1,0 +1,12 @@
+🚀 Configurar GitHub Actions para despliegue automático
+
+- Agregar workflow de GitHub Actions (.github/workflows/deploy.yml)
+- Configurar despliegue automático a GitHub Pages
+- Integrar variables de entorno desde GitHub Secrets
+- Agregar archivo .nojekyll para GitHub Pages
+- Actualizar vite.config.ts con configuración correcta de servidor
+- Agregar script 'start' en package.json
+- Documentación completa en GITHUB_ACTIONS_SETUP.md
+
+El workflow se ejecutará automáticamente en cada push a main
+y desplegará la web completamente funcional a GitHub Pages.
