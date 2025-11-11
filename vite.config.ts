@@ -5,6 +5,10 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: "/academi-co-plus-50020/",
+  build: {
+    outDir: "docs",
+  },
   server: {
     host: "::",
     port: 8080,
